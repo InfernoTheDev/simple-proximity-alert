@@ -7,9 +7,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
+import android.location.*
+import android.location.GpsStatus.GPS_EVENT_STARTED
+import android.location.GpsStatus.GPS_EVENT_STOPPED
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
@@ -27,15 +27,33 @@ class MainActivity : AppCompatActivity() {
     }
     val TAG: String = "MainActivity"
     lateinit var locationManager: LocationManager
+    lateinit var proximities: ArrayList<ProximityPoint>
 
     //define the listener
     val locationListener: LocationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             updateDisplayView("onLocationChanged: ${location?.latitude}, ${location?.longitude}")
         }
-        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
-        override fun onProviderEnabled(provider: String) {}
-        override fun onProviderDisabled(provider: String) {}
+        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {
+            for (i in extras.keySet()){
+                Log.d(TAG, "onStatusChanged extra: ${extras[i]}")
+            }
+            var statustxt = ""
+            if (status == GPS_EVENT_STARTED){
+                statustxt = "GPS_EVENT_STARTED"
+            } else if (status == GPS_EVENT_STOPPED) {
+                statustxt = "GPS_EVENT_STOPPED"
+            } else {
+                statustxt = status.toString()
+            }
+            updateDisplayView("onStatusChanged: ${provider}, status: ${statustxt}")
+        }
+        override fun onProviderEnabled(provider: String) {
+
+        }
+        override fun onProviderDisabled(provider: String) {
+
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,20 +70,22 @@ class MainActivity : AppCompatActivity() {
         if (permission == PackageManager.PERMISSION_GRANTED) {
 
             updateDisplayView("\nProximity start !!")
-            /*locationManager.requestLocationUpdates(
+            locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
-                    2000,
-                    10F,
-                    locationListener)*/
+                    3000,
+                    0F,
+                    locationListener)
 
-            var proximities: ArrayList<ProximityPoint> = ArrayList()
-            val firstPoint = ProximityPoint(997, 12.880350, 100.895056, 10F, "Voova")
-            val secondPoint = ProximityPoint(998, 12.880040, 100.894633, 10F, "Now place next to 7-11 Seven-Eleven")
-            val thirdPoint = ProximityPoint(999, 12.880608, 100.895997, 10F, "Aunty's restaurant")
+            proximities = ArrayList()
+            val firstPoint = ProximityPoint(996, 12.880350, 100.895056, 15F, "Voova")
+            val secondPoint = ProximityPoint(997, 12.880096, 100.894160, 15F, "Sea max condo")
+            val thirdPoint = ProximityPoint(998, 12.880608, 100.895997, 15F, "Aunty's restaurant")
+            val fourthPoint = ProximityPoint(999, 12.877134, 100.885354, 15F, "Beach Police Booth Chaiyaphruek Rd")
 
             proximities.add(firstPoint)
             proximities.add(secondPoint)
             proximities.add(thirdPoint)
+            proximities.add(fourthPoint)
 
             addProximity(proximities)
 
@@ -102,11 +122,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun removeProximity(){
-        Log.d(TAG, "removeProximity")
-        val intent = Intent(ProximityAlert)
-        val pendingIntent = PendingIntent.getBroadcast(this , 0, intent, 0)
-        locationManager?.removeProximityAlert(pendingIntent)
 
+        for (prox in proximities){
+            Log.d(TAG, "removeProximity id: ${prox.id}")
+            val intent = Intent(ProximityAlert)
+            val pendingIntent = PendingIntent.getBroadcast(this , prox.id, intent, 0)
+            locationManager?.removeProximityAlert(pendingIntent)
+        }
+
+    }
+
+    fun removeRequestLocationUpdate(){
+        Log.d(TAG, "removeRequestLocationUpdate")
+        locationManager.removeUpdates(locationListener)
     }
 
     data class ProximityPoint(
@@ -116,6 +144,13 @@ class MainActivity : AppCompatActivity() {
             var radius: Float,
             var name: String
     )
+
+    override fun onDestroy() {
+        removeProximity()
+        removeRequestLocationUpdate()
+        super.onDestroy()
+
+    }
 
     class GeofenceTransitionsIntentService : BroadcastReceiver() {
         val TAG: String = "GeofenceReceiver"
