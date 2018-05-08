@@ -78,8 +78,8 @@ class MainActivity : AppCompatActivity() {
 
             proximities = ArrayList()
             val firstPoint = ProximityPoint(996, 12.880350, 100.895056, 15F, "Voova")
-            val secondPoint = ProximityPoint(997, 12.880096, 100.894160, 15F, "Sea max condo")
-            val thirdPoint = ProximityPoint(998, 12.880608, 100.895997, 15F, "Aunty's restaurant")
+            val secondPoint = ProximityPoint(997, 12.879973, 100.894314, 15F, "Sea max condo")
+            val thirdPoint = ProximityPoint(998, 12.880558, 100.896136, 15F, "Aunty's restaurant")
             val fourthPoint = ProximityPoint(999, 12.877134, 100.885354, 15F, "Beach Police Booth Chaiyaphruek Rd")
 
             proximities.add(firstPoint)
