@@ -50,11 +50,11 @@ class MainActivity : AppCompatActivity() {
         if (permission == PackageManager.PERMISSION_GRANTED) {
 
             updateDisplayView("\nProximity start !!")
-            locationManager.requestLocationUpdates(
+            /*locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
                     2000,
                     10F,
-                    locationListener)
+                    locationListener)*/
 
             var proximities: ArrayList<ProximityPoint> = ArrayList()
             val firstPoint = ProximityPoint(997, 12.880350, 100.895056, 10F, "Voova")
