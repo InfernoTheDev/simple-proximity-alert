@@ -57,15 +57,14 @@ class MainActivity : AppCompatActivity() {
             for (i in extras.keySet()){
                 Log.d(TAG, "onStatusChanged extra: ${extras[i]}")
             }
-            var statustxt = ""
-            if (status == GPS_EVENT_STARTED){
-                statustxt = "GPS_EVENT_STARTED"
-            } else if (status == GPS_EVENT_STOPPED) {
-                statustxt = "GPS_EVENT_STOPPED"
-            } else {
-                statustxt = status.toString()
+
+            var statusTxt = when(status) {
+                GPS_EVENT_STARTED -> "GPS_EVENT_STARTED"
+                GPS_EVENT_STOPPED -> "GPS_EVENT_STOPPED"
+                else -> status.toString()
             }
-            updateDisplayView("onStatusChanged: ${provider}, status: ${statustxt}")
+            updateDisplayView("onStatusChanged: $provider, status: $statusTxt")
+
         }
         override fun onProviderEnabled(provider: String) {
 
@@ -261,8 +260,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-
 
     data class ProximityPoint(
             var id: Int,
