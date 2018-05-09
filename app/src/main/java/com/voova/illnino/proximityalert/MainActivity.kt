@@ -36,8 +36,8 @@ class MainActivity : AppCompatActivity() {
         var key: String = ""
         var proximityEnteringExitingStatus: Boolean = false
 
-        var lastestPointName: String = ""
-        var lastestEnteringExitingStatus:Boolean = false
+        var latestPointName: String = ""
+        var latestEnteringExitingStatus:Boolean = false
         var actualEntering:Boolean = false
         var actualExit:Boolean = false
         var actualStatusCheck:Int = 0
@@ -189,69 +189,69 @@ class MainActivity : AppCompatActivity() {
 
                     isCalculating = true
 
-                    if (!lastestPointName.equals(proximityPoint.name, true)){
-                        lastestPointName = proximityPoint.name
+                    if (!latestPointName.equals(proximityPoint.name, true)){
+                        latestPointName = proximityPoint.name
                     }
-                    if (lastestEnteringExitingStatus != proximityEnteringExitingStatus){
-                        lastestEnteringExitingStatus = proximityEnteringExitingStatus
+                    if (latestEnteringExitingStatus != proximityEnteringExitingStatus){
+                        latestEnteringExitingStatus = proximityEnteringExitingStatus
                     }
 
                     Observable.just(true)
                             .subscribeOn(Schedulers.io())
                             .map {
 
-                                if (lastestPointName.equals(proximityPoint.name, true) &&
-                                        lastestEnteringExitingStatus == proximityEnteringExitingStatus) {
+                                if (latestPointName.equals(proximityPoint.name, true) &&
+                                        latestEnteringExitingStatus == proximityEnteringExitingStatus) {
                                     actualStatusCheck++
                                 }
 
-                                MainActivity.getInstance.updateDisplayView("Step 1 \nLatest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
+                                MainActivity.getInstance.updateDisplayView("Step 1 \nLatest pointName: $latestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
                             }
                             .delay(2, TimeUnit.SECONDS)
                             .map {
-                                if (lastestPointName.equals(proximityPoint.name, true) &&
-                                        lastestEnteringExitingStatus == proximityEnteringExitingStatus) {
+                                if (latestPointName.equals(proximityPoint.name, true) &&
+                                        latestEnteringExitingStatus == proximityEnteringExitingStatus) {
                                     actualStatusCheck++
                                 }
 
-                                MainActivity.getInstance.updateDisplayView("Step 2 \nLatest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
+                                MainActivity.getInstance.updateDisplayView("Step 2 \nLatest pointName: $latestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
                             }
                             .delay(2, TimeUnit.SECONDS)
                             .map {
-                                if (lastestPointName.equals(proximityPoint.name, true) &&
-                                        lastestEnteringExitingStatus == proximityEnteringExitingStatus) {
+                                if (latestPointName.equals(proximityPoint.name, true) &&
+                                        latestEnteringExitingStatus == proximityEnteringExitingStatus) {
                                     actualStatusCheck++
                                 }
 
                                 if (actualStatusCheck >= 3) {
-                                    if (lastestEnteringExitingStatus) {
+                                    if (latestEnteringExitingStatus) {
                                         actualEntering = true
                                     } else {
                                         actualExit = true
                                     }
                                 }
 
-                                MainActivity.getInstance.updateDisplayView("Step 3 \nLatest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck\nlastesStatus: $lastestEnteringExitingStatus\nactualEntering: $actualEntering\nactualExit: $actualExit")
+                                MainActivity.getInstance.updateDisplayView("Step 3 \nLatest pointName: $latestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck\nlastesStatus: $latestEnteringExitingStatus\nactualEntering: $actualEntering\nactualExit: $actualExit")
 
                             }
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe{
                                 MainActivity.getInstance.updateDisplayView("Step 4 \nactualEntering: $actualEntering \nactualExit: $actualExit")
                                 if (actualEntering) {
-                                    val m = "\n======================================\nYou are Entering ${lastestPointName} !!\n======================================"
+                                    val m = "\n======================================\nYou are Entering $latestPointName !!\n======================================"
                                     Log.d(TAG, m)
                                     MainActivity.getInstance.updateDisplayView(m)
                                     Toast.makeText(context, m, Toast.LENGTH_LONG).show()
                                 }
                                 if (actualExit) {
-                                    val m = "\n======================================\nYou are Exiting ${lastestPointName} !!\n======================================"
+                                    val m = "\n======================================\nYou are Exiting $latestPointName !!\n======================================"
                                     Log.d(TAG, m)
                                     MainActivity.getInstance.updateDisplayView(m)
                                     Toast.makeText(context, m, Toast.LENGTH_LONG).show()
                                 }
 
-                                lastestPointName = ""
-                                lastestEnteringExitingStatus = false
+                                latestPointName = ""
+                                latestEnteringExitingStatus = false
                                 actualEntering = false
                                 actualExit = false
                                 actualStatusCheck = 0
