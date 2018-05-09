@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         var proximityEnteringExitingStatus: Boolean = false
 
         var lastestPointName: String = ""
-        var lastesEnteringExitingStatus:Boolean = false
+        var lastestEnteringExitingStatus:Boolean = false
         var actualEntering:Boolean = false
         var actualExit:Boolean = false
         var actualStatusCheck:Int = 0
@@ -112,6 +112,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Permission denied !!", Toast.LENGTH_LONG).show()
         }
     }
+
     fun updateDisplayView(txt: String){
         val sdf = SimpleDateFormat("dd/M/yyyy hh:mm:ss")
         val currentDate = sdf.format(Date())
@@ -130,15 +131,15 @@ class MainActivity : AppCompatActivity() {
             bundle.putParcelable("proximity_point", prox)
             intent.putExtra("proximity_data", bundle)
 
-            val pendingIntent: PendingIntent = PendingIntent.getBroadcast(this, prox.id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val pendingIntent: PendingIntent =
+                    PendingIntent.getBroadcast(this, prox.id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
             locationManager.addProximityAlert(
                     prox.lat,
                     prox.lon,
                     prox.radius,
                     -1,
-                    pendingIntent
-                    )
+                    pendingIntent)
         }
     }
 
@@ -191,46 +192,46 @@ class MainActivity : AppCompatActivity() {
                     if (!lastestPointName.equals(proximityPoint.name, true)){
                         lastestPointName = proximityPoint.name
                     }
-                    if (lastesEnteringExitingStatus != proximityEnteringExitingStatus){
-                        lastesEnteringExitingStatus = proximityEnteringExitingStatus
+                    if (lastestEnteringExitingStatus != proximityEnteringExitingStatus){
+                        lastestEnteringExitingStatus = proximityEnteringExitingStatus
                     }
-                    Observable
-                            .just(true)
+
+                    Observable.just(true)
                             .subscribeOn(Schedulers.io())
                             .map {
 
                                 if (lastestPointName.equals(proximityPoint.name, true) &&
-                                        lastesEnteringExitingStatus == proximityEnteringExitingStatus) {
+                                        lastestEnteringExitingStatus == proximityEnteringExitingStatus) {
                                     actualStatusCheck++
                                 }
 
-                                MainActivity.getInstance.updateDisplayView("Step 1 \nLastest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
+                                MainActivity.getInstance.updateDisplayView("Step 1 \nLatest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
                             }
                             .delay(2, TimeUnit.SECONDS)
                             .map {
                                 if (lastestPointName.equals(proximityPoint.name, true) &&
-                                        lastesEnteringExitingStatus == proximityEnteringExitingStatus) {
+                                        lastestEnteringExitingStatus == proximityEnteringExitingStatus) {
                                     actualStatusCheck++
                                 }
 
-                                MainActivity.getInstance.updateDisplayView("Step 2 \nLastest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
+                                MainActivity.getInstance.updateDisplayView("Step 2 \nLatest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck")
                             }
                             .delay(2, TimeUnit.SECONDS)
                             .map {
                                 if (lastestPointName.equals(proximityPoint.name, true) &&
-                                        lastesEnteringExitingStatus == proximityEnteringExitingStatus) {
+                                        lastestEnteringExitingStatus == proximityEnteringExitingStatus) {
                                     actualStatusCheck++
                                 }
 
                                 if (actualStatusCheck >= 3) {
-                                    if (lastesEnteringExitingStatus) {
+                                    if (lastestEnteringExitingStatus) {
                                         actualEntering = true
                                     } else {
                                         actualExit = true
                                     }
                                 }
 
-                                MainActivity.getInstance.updateDisplayView("Step 3 \nLastest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck\nlastesStatus: $lastesEnteringExitingStatus\nactualEntering: $actualEntering\nactualExit: $actualExit")
+                                MainActivity.getInstance.updateDisplayView("Step 3 \nLatest pointName: $lastestPointName \nNew point: ${proximityPoint.name}, \nActualStatusCheck: $actualStatusCheck\nlastesStatus: $lastestEnteringExitingStatus\nactualEntering: $actualEntering\nactualExit: $actualExit")
 
                             }
                             .observeOn(AndroidSchedulers.mainThread())
@@ -250,7 +251,7 @@ class MainActivity : AppCompatActivity() {
                                 }
 
                                 lastestPointName = ""
-                                lastesEnteringExitingStatus = false
+                                lastestEnteringExitingStatus = false
                                 actualEntering = false
                                 actualExit = false
                                 actualStatusCheck = 0
