@@ -2,6 +2,7 @@ package com.voova.illnino.proximityalert
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,6 +14,8 @@ import android.location.GpsStatus.GPS_EVENT_STOPPED
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
+import android.support.v4.app.NotificationCompat
+import android.support.v4.app.NotificationManagerCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -25,11 +28,12 @@ import kotlinx.android.synthetic.main.fragment_main.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.log
 
 class MainActivity : AppCompatActivity() {
     companion object {
         lateinit var getInstance: MainActivity
-        val ProximityAlert = "ProximityAlert"
+        const val ProximityAlert = "ProximityAlert"
 
         var proximityBundle = Bundle()
         lateinit var proximityPoint: ProximityPoint
@@ -42,13 +46,16 @@ class MainActivity : AppCompatActivity() {
         var actualExit:Boolean = false
         var actualStatusCheck:Int = 0
         var isCalculating:Boolean = false
+        var isProxBackgroundServiceRunning = false
     }
     val TAG: String = "MainActivity"
     lateinit var locationManager: LocationManager
     lateinit var proximities: ArrayList<ProximityPoint>
+    lateinit var proxServiceIntent: Intent
+
 
     //define the listener
-    val locationListener: LocationListener = object : LocationListener {
+    private val locationListener: LocationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             updateDisplayView("onLocationChanged: ${location?.latitude}, ${location?.longitude}")
             updateDisplayView("accuracy: ${location?.accuracy} meters ")
@@ -80,14 +87,13 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
 
         getInstance = this
-
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
         val permission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
 
         if (permission == PackageManager.PERMISSION_GRANTED) {
 
             updateDisplayView("\nProximity start !!")
+
             locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
                     3000,
@@ -107,10 +113,31 @@ class MainActivity : AppCompatActivity() {
 
             addProximity(proximities)
 
+            proxServiceIntent = Intent(this, ProximityBackgroundService::class.java)
+
         }else{
             updateDisplayView("\nPermission denied !!")
             Toast.makeText(this, "Permission denied !!", Toast.LENGTH_LONG).show()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        startProxBackgroundService()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        stopProxBackgroundService()
+    }
+
+    private fun startProxBackgroundService(){
+        startService(proxServiceIntent)
+        isProxBackgroundServiceRunning = true
+    }
+    private fun stopProxBackgroundService(){
+        stopService(proxServiceIntent)
+        isProxBackgroundServiceRunning = false
     }
 
     fun updateDisplayView(txt: String){
@@ -123,7 +150,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("MissingPermission")
-    fun addProximity(proxList: ArrayList<ProximityPoint>){
+    private fun addProximity(proxList: ArrayList<ProximityPoint>){
         for (prox in proxList){
             updateDisplayView("Add proximity point : ${prox.name}, ${prox.lat}, ${prox.lon}, radius: ${prox.radius}")
             val intent = Intent(ProximityAlert)
@@ -152,7 +179,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun removeRequestLocationUpdate(){
+    private fun removeRequestLocationUpdate(){
         Log.d(TAG, "removeRequestLocationUpdate")
         locationManager.removeUpdates(locationListener)
     }
@@ -160,6 +187,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         removeProximity()
         removeRequestLocationUpdate()
+        ProximityBackgroundService.getInstance.stopSelf()
         super.onDestroy()
 
     }
@@ -177,8 +205,7 @@ class MainActivity : AppCompatActivity() {
             proximityBundle = intent.extras["proximity_data"] as Bundle
             proximityPoint = proximityBundle.getParcelable<ProximityPoint>("proximity_point")
 
-            MainActivity.getInstance.updateDisplayView("Incoming point: ${proximityPoint.name}")
-            MainActivity.getInstance.updateDisplayView("======================================")
+            MainActivity.getInstance.updateDisplayView("Incoming point: ${proximityPoint.name}\n======================================")
 
             if (intent.action.equals(ProximityAlert)){
 
@@ -237,17 +264,27 @@ class MainActivity : AppCompatActivity() {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe{
                                 MainActivity.getInstance.updateDisplayView("Step 4 \nactualEntering: $actualEntering \nactualExit: $actualExit")
+                                var m = ""
                                 if (actualEntering) {
-                                    val m = "\n======================================\nYou are Entering $latestPointName !!\n======================================"
+                                    m = "\n======================================\nYou are Entering $latestPointName !!\n======================================"
                                     Log.d(TAG, m)
                                     MainActivity.getInstance.updateDisplayView(m)
                                     Toast.makeText(context, m, Toast.LENGTH_LONG).show()
                                 }
                                 if (actualExit) {
-                                    val m = "\n======================================\nYou are Exiting $latestPointName !!\n======================================"
+                                    m = "\n======================================\nYou are Exiting $latestPointName !!\n======================================"
                                     Log.d(TAG, m)
                                     MainActivity.getInstance.updateDisplayView(m)
                                     Toast.makeText(context, m, Toast.LENGTH_LONG).show()
+                                }
+                                Log.d(TAG, "isProxBackgroundServiceRunning: $isProxBackgroundServiceRunning")
+                                if (isProxBackgroundServiceRunning) {
+                                    var txt = when(latestEnteringExitingStatus){
+                                        true -> "You are Entering $latestPointName"
+                                        false -> "You are Exiting $latestPointName"
+                                    }
+                                    if(actualEntering)
+                                    MainActivity.getInstance.createNotification(txt, m)
                                 }
 
                                 latestPointName = ""
@@ -260,6 +297,23 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    fun createNotification(content: String, m: String){
+        Log.d(TAG, "createNotification !! $content")
+        val notification = NotificationCompat.Builder(MainActivity.getInstance, "proximity_notification_entering_channel").apply {
+            this.setSmallIcon(R.drawable.notification_icon_background)
+            this.setContentTitle("Proximity Alert")
+            this.setContentText(content)
+            this.setStyle(NotificationCompat
+                    .BigTextStyle()
+                    .bigText(m))
+
+            this.priority = NotificationCompat.PRIORITY_HIGH
+        }.build()
+
+        val notificationManager = NotificationManagerCompat.from(MainActivity.getInstance)
+        notificationManager.notify(9, notification)
     }
 
     data class ProximityPoint(
@@ -297,6 +351,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-
 }

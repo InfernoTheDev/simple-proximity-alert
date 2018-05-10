@@ -27,6 +27,7 @@
                 <action android:name="ProximityAlert"></action>
             </intent-filter>
         </receiver>
+        <service android:name=".ProximityBackgroundService"></service>
     </application>
 
 </manifest>
