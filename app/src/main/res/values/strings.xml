@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">ProximityAlert</string>
+    <string name="app_name">ProximityAlertApi</string>
     <string name="action_settings">Settings</string>
 </resources>

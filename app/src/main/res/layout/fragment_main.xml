@@ -8,18 +8,46 @@
         tools:showIn="@layout/activity_main"
         tools:context=".MainActivityFragment">
 
+    <EditText
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:inputType="textPersonName"
+            android:ems="10"
+            android:id="@+id/edt_search_box"
+            app:layout_constraintBottom_toTopOf="@+id/sv_display"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp"
+            app:layout_constraintVertical_bias="0.0"
+            app:layout_constraintEnd_toStartOf="@+id/btn_search"
+            android:hint="Enter url here."/>
+
+    <Button
+            android:text="@android:string/search_go"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btn_search"
+            app:layout_constraintStart_toEndOf="@+id/edt_search_box"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/sv_display"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="8dp"
+            app:layout_constraintHorizontal_bias="0.859"
+            app:layout_constraintVertical_bias="0.0"/>
+
     <ScrollView
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:id="@+id/sv_display"
             android:layout_marginBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginTop="8dp"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginEnd="8dp"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="8dp">
+            android:layout_marginStart="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/edt_search_box">
 
         <LinearLayout
                 android:layout_width="match_parent"
